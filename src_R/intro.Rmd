@@ -1,0 +1,23 @@
+---
+title: "R Notebook"
+output:
+  html_notebook: default
+  pdf_document: default
+---
+
+## Funktion
+Example as an easy way to reuse code
+ #to define funktion: press strg+alt+enter 
+```{r}
+
+  
+sayHello <-function(name){
+  print(paste("Hello", name))
+} 
+
+```
+## using the funktion
+
+```{r}
+sayHello ("to new opportunities")
+```
