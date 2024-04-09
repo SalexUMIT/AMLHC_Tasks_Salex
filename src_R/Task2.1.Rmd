@@ -1,0 +1,41 @@
+---
+title: "R Notebook"
+output:
+  html_notebook: default
+  pdf_document: default
+---
+
+# Data preprocessing
+
+## Load data and get an overview
+Our dataset contains primary numeric features
+
+
+```{r}
+
+dsta <- read.csv("C:/Users/PC/Desktop/Modul12/food.csv", row.names =1)
+dim(dsta)
+sum(is.na(dsta))
+
+```
+
+## PCA
+```{r}
+scaled_dsta <- scale(dsta[,-1])
+pca <- princomp(scaled_dsta)
+
+summary(pca)
+```
+##PCA-Graph
+```{r}
+library(ggplot2)
+
+scores <- as.data.frame(pca$scores)
+names(scores) <- paste0("PC", 1:ncol(scores))
+
+ggplot(scores, aes(x = PC1, y = PC2)) +
+  geom_point() +
+  labs(x = 'PC1', y = 'PC2', title = 'PCA Score Plot') +
+  theme_minimal()
+```
+
