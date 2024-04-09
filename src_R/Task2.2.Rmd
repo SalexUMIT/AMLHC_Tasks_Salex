@@ -1,0 +1,107 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+---
+rm(list=ls())
+---
+title: "R Notebook"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+#library´s used
+```{r}
+library(tidyverse)
+library(Hmisc)
+library(FSelector)
+library(ggplot2)
+```
+
+
+
+ #load dataset
+
+```{r}
+dib <- read.csv("C:/Users/PC/Desktop/Modul12/diabetes.csv", header = T)
+
+```
+
+#function to detect outliers and replace with NA
+
+```{r}
+
+
+outlierdetection <- function(x) {
+  Q1 <- quantile(x, 0.25, na.rm = TRUE)
+  Q3 <- quantile(x, 0.75, na.rm = TRUE)
+  IQR <- Q3 - Q1
+  lower_bound <- Q1 - 1.5 * IQR
+  upper_bound <- Q3 + 1.5 * IQR
+  x[x < lower_bound  | x > upper_bound] <- NA
+  return(x)
+}
+
+numeric_col <- sapply(dib, is.numeric)
+dib[numeric_col] <- lapply(dib[numeric_col], outlierdetection)
+
+
+```
+
+# replace 0 Values
+```{r}
+
+
+zero_val <- c("plas", "pres", "skin", "insu", "mass")
+dib[zero_val] <- lapply(dib [zero_val], function(x) replace(x, x == 0, NA))
+head(dib)
+
+
+```
+
+# Drop NA
+
+```{r}
+dib_new <- dib %>% drop_na()
+```
+
+
+# Describe
+```{r}
+dib_dis <- describe(dib_new) 
+```
+# Rank
+
+```{r}
+
+feature_names <- names(dib_new)
+ig <- information.gain( class~ ., dib_new[, feature_names])
+ig_df <- data.frame(Feature = feature_names, Information_Gain = ig)
+
+ig_sorted <- ig_df[order(-ig_df$Information_Gain), ]
+print(ig_sorted)
+```
+
+#Boxplot
+```{r}
+highest_ig_feature <- feature_names[highest_ig_index]
+smallest_ig_feature <- feature_names[smallest_ig_index]
+
+ggplot(dib_dis, aes_string(x = highest_ig_feature)) +
+  geom_boxplot() +
+  ggtitle(paste("Boxplot of", highest_ig_feature))
+
+ggplot(dib_dis, aes_string(x = highest_ig_feature)) +
+  geom_density() +
+  ggtitle(paste("Distribution plot of", highest_ig_feature))
+
+ggplot(dib_dis, aes_string(x = smallest_ig_feature)) +
+  geom_boxplot() +
+  ggtitle(paste("Boxplot of", smallest_ig_feature))
+
+ggplot(dib_dis, aes_string(x = smallest_ig_feature)) +
+  geom_density() +
+  ggtitle(paste("Distribution plot of", smallest_ig_feature))
+```
+
