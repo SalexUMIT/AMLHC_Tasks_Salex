@@ -1,0 +1,79 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
+
+---
+title: "Task 4.1 Supervised learning"
+output:
+  html_notebook: default
+  pdf_document: default
+---
+# From Alexandra Schwaiger
+
+##used library
+
+```{r}
+
+require("ggplot2")
+require("caret")
+
+```
+
+
+## Load data and get an overview
+
+
+```{r}
+
+heart <- read.csv("C:/Users/PC/Desktop/Modul12/heartdata.csv", row.names =1)
+
+```
+
+## checking for normal distribution
+
+```{r}
+cor(heart$biking, heart$smoking)
+plot(heart$heartdisease ~ heart$smoking)
+plot(heart$heartdisease ~ heart$biking)
+hist(heart$biking)
+hist(heart$smoking)
+
+```
+## data is normal distributed
+
+## Lineare Regression Model
+```{r}
+hd_lm <- lm(heartdisease ~ biking + smoking, data = heart)
+summary(hd_lm)
+
+```
+## good fit with r² 0.98; p-value < 0,05 significant
+
+##plot to check model
+```{r}
+par(mfrow=c(2,2))
+plot(hd_lm)
+```
+
+## plot to visualise regression
+```{r}
+ggplot(heart, aes(x= heartdisease, y = biking))+
+  geom_point()+
+  stat_smooth(method = "lm", col = "green")
+
+ggplot(heart, aes(x= heartdisease, y = smoking))+
+  geom_point()+
+  stat_smooth(method = "lm", col = "red")
+
+```
+
+## Training funktion
+```{r}
+fitControl <- trainControl (## 18-fold CV
+                          method = "cv", number = 10)
+
+lmfit <- train(heartdisease ~., data=heart, method="lm", trControl = fitControl, preProc=c("center","scale"))
+```
+
