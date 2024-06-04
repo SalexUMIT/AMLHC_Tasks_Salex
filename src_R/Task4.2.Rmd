@@ -1,0 +1,55 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
+
+---
+title: "Task 4.2 Supervised learning"
+output:
+  html_notebook: default
+  pdf_document: default
+---
+# From Alexandra Schwaiger
+
+##used library
+
+```{r}
+
+require("caret")
+require("foreign")
+```
+
+
+## Load data and get an overview
+
+```{r}
+
+diab <- read.arff("C:/Users/PC/Desktop/Modul12/diabetes.arff")
+str(diab)
+
+```
+
+#GLM for binomial distribution
+
+```{r}
+diaglm <- glm(class ~ ., data=diab, family = "binomial")
+
+```
+
+## Evaluate Model
+```{r}
+summary(diaglm)
+plot(class ~ ., data = diab)
+
+
+```
+
+## Training funktion
+```{r}
+set.seed(123)
+fitControl <- trainControl (method = "cv", number = 10)
+
+glmfit <- train(class ~., data=diab, method="glm", family=binomial, trControl = fitControl, preProc=c("center","scale"))
+```
+
