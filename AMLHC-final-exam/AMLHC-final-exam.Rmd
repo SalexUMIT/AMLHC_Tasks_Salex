@@ -1,0 +1,33 @@
+---
+title: "AMLHC-final-exam"
+output: html_notebook
+---
+#by Alexandra Schwaiger
+
+#Dataset: Hepatitis C (Kaggle)
+
+#Prediction of Hepatitis C based on 12 attributes of blood donors and Hep C patients laboratory and demographic values
+
+#needet library
+```{r}
+library(tidyverse)
+```
+
+#read in the data and get an overview
+
+```{r}
+hepc <- read.csv("C:/Users/PC/Desktop/HepatitisCdata.xls", header = TRUE) 
+str(hepc)
+```
+#615 observations and 14 attributes of blood donors and Hepatitis C patients laboratory and demographic values
+#All attributes except Category and Sex are numerical
+#The dataset contains a number of NA= Not available values
+
+#Preprocessing: drop NA
+```{r}
+HepC_noNA <- hepc %>% drop_na()
+str(HepC_noNA)
+```
+#589 remaining observations
+
+#
