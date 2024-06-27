@@ -1,0 +1,151 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
+---
+title: "AMLHC-final-exam"
+output: html_notebook
+---
+by Alexandra Schwaiger
+
+Dataset: Hepatitis C (Kaggle)
+
+Goal: Prediction of Hepatitis C based on 12 attributes of blood donors and Hep C patients laboratory and demographic values.
+
+Method:
+Since my dataset contains information if patients have Hepatitis or not, so I will use supervised learning methods.The task is a classification problem and my target attribute for classification is a Category (blood donors vs. Hepatitis C, including its progress: 'just' Hepatitis C, Fibrosis, Cirrhosis).
+Possible Methods are decission tree, NN or alternativly K-Nearest Neighbors.
+
+needet library
+```{r}
+library(gridExtra)
+library(randomForest)
+library(tidyverse)
+library(gplots)
+library(readr)
+library(caret)
+library(GGally)
+library(corrplot)
+library(caTools)
+library(keras)
+library(reshape2)
+
+```
+
+1. Read in the data and get an overview
+
+```{r}
+hepc <- read.csv("C:/Users/PC/Desktop/HepatitisCdata.xls", header = TRUE) 
+str(hepc)
+```
+615 observations and 14 attributes of blood donors and Hepatitis C patients laboratory and demographic values
+All attributes except Category and Sex are numerical
+The dataset contains a number of NA= Not available values
+
+Visualisation:
+```{r}
+
+ggplot(hepc, aes(x = Category)) +
+  geom_bar() +
+  labs(x = "Category") +
+  ggtitle("Count Plot for Category")
+```
+Dataset is unbalanced 
+
+
+```{r}
+hep_plot <- hepc[,2:14]
+hep_plot$Category <- as.integer(factor(hep_plot$Category, levels = c('0=Blood Donor', '0s=suspect Blood Donor', '1=Hepatitis', '2=Fibrosis', '3=Cirrhosis'), labels = c(0, 0, 1, 2, 3)))
+hep_plot$Sex <- as.integer(factor(hep_plot$Sex, levels = c('m', 'f'), labels = c(1, 0)))
+
+numeric_vars <- names(hep_plot)[sapply(hep_plot, is.numeric)]
+cor_matrix <- cor(hep_plot[, numeric_vars], use = "complete.obs")
+
+cor_matrix_melted <- melt(cor_matrix)
+
+ggplot(cor_matrix_melted, aes(Var1, Var2, fill = value)) +
+  geom_tile(color = "orange") +
+  scale_fill_gradient2(low = "white", mid = "peachpuff2", high = "deeppink1", midpoint = 0,
+                       limits = c(-1, 1), name = "Correlation") +
+  geom_text(aes(label = round(value, 2)), vjust = 1) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Correlation Heatmap",
+       x = "Variables", y = "Variables") +
+  coord_fixed()
+
+```
+
+
+
+2. Split data into training and test sets
+```{r}
+set.seed(46)
+trainIndex <- createDataPartition(hepc$Category, p = 0.75, list = FALSE)
+trainData <- hepc[trainIndex, ]
+testData <- hepc
+
+```
+
+Preprocessing Training data: Change the categorical Variables to levels and fill missing values with input of median.
+```{r}
+
+trainData$Category <- as.integer(factor(trainData$Category, levels = c('0=Blood Donor', '0s=suspect Blood Donor', '1=Hepatitis', '2=Fibrosis', '3=Cirrhosis'), labels = c(0, 0, 1, 2, 3)))
+trainData$Sex <- as.integer(factor(trainData$Sex, levels = c('m', 'f'), labels = c(1, 0)))
+trainData$Category <- as.factor(trainData$Category)
+
+preProcessValues <- preProcess(trainData[, -which(names(trainData) == "Category")], method = c("medianImpute", "center", "scale"))
+trainData[, -which(names(trainData) == "Category")] <- predict(preProcessValues, trainData[, -which(names(trainData) == "Category")])
+```
+
+Same for test data
+```{r}
+testData$Category <- as.integer(factor(testData$Category, levels = c('0=Blood Donor', '0s=suspect Blood Donor', '1=Hepatitis', '2=Fibrosis', '3=Cirrhosis'), labels = c(0, 0, 1, 2, 3)))
+testData$Sex <- as.integer(factor(testData$Sex, levels = c('m', 'f'), labels = c(1, 0)))
+testData$Category <- as.factor(testData$Category)
+testData[, -which(names(testData) == "Category")] <- predict(preProcessValues, testData[, -which(names(testData) == "Category")])
+```
+
+``
+
+
+Split the set into trainings- and test-set.
+```{r}
+x_train <- trainData %>% select(-Category)
+y_train <- trainData$Category
+x_test <- testData %>% select(-Category)
+y_test <- testData$Category
+
+
+```
+
+
+
+Train random forest model
+
+```{r}
+model_rf <- train(x_train, y_train, method="rf", preProcess=c())
+
+featVar <- apply(x_train, 2, var)
+length(featVar<0.001)
+
+trControl <- trainControl(method="cv", number=10)
+model_rf <- train(x_train, y_train, method="rf", preProcess=c("center", "scale"),
+trainControl=trControl)
+```
+
+```{r}
+vi <- varImp(model_rf)
+```
+
+```{r}
+best_rf <- model_rf$finalModel
+y_predicted <- predict(best_rf, x_test)
+confusionMatrix(y_predicted, y_test)
+```
+The model achieved an very good overall accuracy of 99.67%, with a Kappa value of 0.98.25. 
+`
+
+
+
